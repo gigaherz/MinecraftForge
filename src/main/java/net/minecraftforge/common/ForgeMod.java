@@ -19,15 +19,18 @@
 
 package net.minecraftforge.common;
 
+import net.minecraft.item.Item;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.*;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLModIdMappingEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.server.command.ConfigCommand;
 import net.minecraftforge.server.command.ForgeCommand;
 import net.minecraftforge.versions.forge.ForgeVersion;
 import net.minecraftforge.versions.mcp.MCPVersion;
@@ -48,9 +51,8 @@ import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.fluids.UniversalBucket;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
@@ -76,8 +78,6 @@ public class ForgeMod implements WorldPersistenceHooks.WorldPersistenceHook
         return INSTANCE;
     }
 
-    public UniversalBucket universalBucket;
-
     public ForgeMod()
     {
         LOGGER.info(FORGEMOD,"Forge mod loading, version {}, for MC {} with MCP {}", ForgeVersion.getVersion(), MCPVersion.getMCVersion(), MCPVersion.getMCPVersion());
@@ -87,6 +87,8 @@ public class ForgeMod implements WorldPersistenceHooks.WorldPersistenceHook
         WorldPersistenceHooks.addHook(new FMLWorldPersistenceHook());
         final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::preInit);
+        modEventBus.addListener(this::postInit);
+        modEventBus.addListener(this::onAvailable);
         modEventBus.addListener(this::gatherData);
         MinecraftForge.EVENT_BUS.addListener(this::serverStarting);
         MinecraftForge.EVENT_BUS.addListener(this::playerLogin);
@@ -98,6 +100,20 @@ public class ForgeMod implements WorldPersistenceHooks.WorldPersistenceHook
         ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST, ()-> Pair.of(()->"ANY", (remote, isServer)-> true));
         StartupMessageManager.addModMessage("Forge version "+ForgeVersion.getVersion());
     }
+
+/*
+    public void missingMapping(RegistryEvent.MissingMappings<Item> event)
+    {
+        for (MissingMappings.Mapping<Item> entry : event.getAllMappings())
+        {
+            if (entry.key.toString().equals("minecraft:totem")) //This item changed from 1.11 -> 1.11.2
+            {
+                ResourceLocation newTotem = new ResourceLocation("minecraft:totem_of_undying");
+                entry.remap(ForgeRegistries.ITEMS.getValue(newTotem));
+            }
+        }
+    }
+*/
 
     public void playerLogin(PlayerEvent.PlayerLoggedInEvent event)
     {
@@ -120,10 +136,35 @@ public class ForgeMod implements WorldPersistenceHooks.WorldPersistenceHook
         }
     }
 
+    public void postInit(InterModProcessEvent evt)
+    {
+        registerAllBiomesAndGenerateEvents();
+        //ForgeChunkManager.loadConfiguration();
+    }
+
+    private static void registerAllBiomesAndGenerateEvents()
+    {
+/*
+        for (Biome biome : ForgeRegistries.BIOMES.getValuesCollection())
+        {
+            if (biome.decorator instanceof DeferredBiomeDecorator)
+            {
+                DeferredBiomeDecorator decorator = (DeferredBiomeDecorator)biome.decorator;
+                decorator.fireCreateEventAndReplace(biome);
+            }
+
+            BiomeDictionary.ensureHasTypes(biome);
+        }
+*/
+    }
+
+    public void onAvailable(FMLLoadCompleteEvent evt)
+    {
+    }
+
     public void serverStarting(FMLServerStartingEvent evt)
     {
         new ForgeCommand(evt.getCommandDispatcher());
-        ConfigCommand.register(evt.getCommandDispatcher());
     }
 
     public void serverStopping(FMLServerStoppingEvent evt)
@@ -139,7 +180,6 @@ public class ForgeMod implements WorldPersistenceHooks.WorldPersistenceHook
         DimensionManager.writeRegistry(dims);
         if (!dims.isEmpty())
             forgeData.put("dims", dims);
-        // TODO fluids FluidRegistry.writeDefaultFluidList(forgeData);
         return forgeData;
     }
 
@@ -148,7 +188,6 @@ public class ForgeMod implements WorldPersistenceHooks.WorldPersistenceHook
     {
         if (tag.contains("dims", 10))
             DimensionManager.readRegistry(tag.getCompound("dims"));
-        // TODO fluids FluidRegistry.loadFluidDefaults(tag);
     }
 
     public void mappingChanged(FMLModIdMappingEvent evt)
