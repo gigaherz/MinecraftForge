@@ -1,0 +1,11 @@
+--- a/net/minecraft/client/renderer/entity/EntityRenderer.java
++++ b/net/minecraft/client/renderer/entity/EntityRenderer.java
+@@ -28,7 +28,7 @@
+ import net.minecraftforge.api.distmarker.OnlyIn;
+ 
+ @OnlyIn(Dist.CLIENT)
+-public abstract class EntityRenderer<T extends Entity> {
++public abstract class EntityRenderer<T extends Entity> implements net.minecraftforge.client.model.dynamic.adapters.IEntityRenderable<T> {
+    private static final ResourceLocation field_110778_a = new ResourceLocation("textures/misc/shadow.png");
+    protected final EntityRendererManager field_76990_c;
+    protected float field_76989_e;

@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import joptsimple.internal.Strings;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.model.*;
 import net.minecraft.client.renderer.texture.ISprite;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -33,12 +34,16 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.model.*;
+import net.minecraftforge.client.model.dynamic.adapters.BakedGeometryRenderable;
 import net.minecraftforge.client.model.geometry.IModelGeometryPart;
 import net.minecraftforge.client.model.geometry.IMultipartModelGeometry;
 import net.minecraftforge.client.model.pipeline.IVertexConsumer;
+import net.minecraftforge.client.model.pipeline.LightUtil;
 import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
+import net.minecraftforge.common.model.IModelState;
 import net.minecraftforge.common.model.TRSRTransformation;
 import org.apache.commons.lang3.tuple.Pair;
+import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -338,6 +343,46 @@ public class OBJModel2 implements IMultipartModelGeometry<OBJModel2>
         return Optional.ofNullable(parts.get(name));
     }
 
+    public VertexFormat calculateBestVertexFormat(@Nullable VertexFormat base)
+    {
+        VertexFormat fmt = base != null ? new VertexFormat(base): new VertexFormat();
+
+        fmt = addElementIfNotPresent(fmt, DefaultVertexFormats.POSITION_3F);
+
+        if (texCoords.size() > 0)
+        {
+            fmt = addElementIfNotPresent(fmt, DefaultVertexFormats.TEX_2F);
+        }
+
+        if (normals.size() > 0)
+        {
+            fmt = addElementIfNotPresent(fmt, DefaultVertexFormats.NORMAL_3B);
+            fmt = addElementIfNotPresent(fmt, DefaultVertexFormats.PADDING_1B);
+        }
+
+        if (colors.size() > 0)
+        {
+            fmt = addElementIfNotPresent(fmt, DefaultVertexFormats.COLOR_4UB);
+        }
+
+        if (ambientToFullbright && parts.values().stream().anyMatch(ModelGroup::hasAnyFullBright))
+        {
+            fmt = addElementIfNotPresent(fmt, DefaultVertexFormats.TEX_2S);
+        }
+
+        return fmt;
+    }
+
+    private static VertexFormat addElementIfNotPresent(VertexFormat fmt, VertexFormatElement element)
+    {
+        for(VertexFormatElement e : fmt.getElements())
+        {
+            if (e.getType() == element.getType() && e.getIndex() == element.getIndex())
+                return fmt;
+        }
+        return fmt.addElement(element);
+    }
+
     private Pair<BakedQuad,Direction> makeQuad(int[][] indices, int tintIndex, Vector4f colorTint, Vector4f ambientColor, boolean isFullbright, TextureAtlasSprite texture, VertexFormat format, Optional<TRSRTransformation> transform)
     {
         boolean needsNormalRecalculation = false;
@@ -503,6 +548,21 @@ public class OBJModel2 implements IMultipartModelGeometry<OBJModel2>
         }
     }
 
+    public BakedGeometryRenderable<Void> bakeRenderable()
+    {
+        return bakeRenderable(DummyAtlasSprite.GETTER);
+    }
+
+    public BakedGeometryRenderable<Void> bakeRenderable(Function<ResourceLocation, TextureAtlasSprite> spriteGetter)
+    {
+        return BakedGeometryRenderable.of(GL11.GL_QUADS, calculateBestVertexFormat(null), ((bufferBuilder, fmt) -> {
+            this.addQuads(
+                    new StandaloneModelConfiguration("", true, diffuseLighting),
+                    new VertexBufferModelBuilder(bufferBuilder),
+                    null, spriteGetter, new BasicState(ModelRotation.X0_Y0, false), fmt);
+        }));
+    }
+
     public static class ModelSettings
     {
         @Nonnull
@@ -666,6 +726,99 @@ public class OBJModel2 implements IMultipartModelGeometry<OBJModel2>
         public boolean isFullbright()
         {
             return mat != null && mat.ambientColor.epsilonEquals(new Vector4f(1,1,1,1), 1/256f);
+        }
+    }
+
+    private static class VertexBufferModelBuilder implements IModelBuilder<VertexBufferModelBuilder>
+    {
+        private final BufferBuilder bufferBuilder;
+
+        public VertexBufferModelBuilder(BufferBuilder bufferBuilder)
+        {
+            this.bufferBuilder = bufferBuilder;
+        }
+
+        @Override
+        public VertexBufferModelBuilder addFaceQuad(Direction facing, BakedQuad quad)
+        {
+            LightUtil.renderQuadColor(bufferBuilder, quad, -1);
+            return this;
+        }
+
+        @Override
+        public VertexBufferModelBuilder addGeneralQuad(BakedQuad quad)
+        {
+            LightUtil.renderQuadColor(bufferBuilder, quad, -1);
+            return this;
+        }
+
+        @Override
+        public IBakedModel build()
+        {
+            return null;
+        }
+    }
+
+    private static class StandaloneModelConfiguration implements IModelConfiguration
+    {
+        private final String modelName;
+        private final boolean diffuseLighting;
+        private final boolean directionalLighting;
+
+        private StandaloneModelConfiguration(String modelName, boolean directionalLighting, boolean diffuseLighting)
+        {
+            this.modelName = modelName;
+            this.directionalLighting = directionalLighting;
+            this.diffuseLighting = diffuseLighting;
+        }
+
+        @Nullable
+        @Override
+        public IUnbakedModel getOwnerModel()
+        {
+            return null;
+        }
+
+        @Override
+        public String getModelName()
+        {
+            return modelName;
+        }
+
+        @Override
+        public boolean isTexturePresent(String name)
+        {
+            return true;
+        }
+
+        @Override
+        public String resolveTexture(String name)
+        {
+            return "";
+        }
+
+        @Override
+        public boolean isShadedInGui()
+        {
+            return directionalLighting;
+        }
+
+        @Override
+        public boolean useSmoothLighting()
+        {
+            return diffuseLighting;
+        }
+
+        @Override
+        public ItemCameraTransforms getCameraTransforms()
+        {
+            return ItemCameraTransforms.DEFAULT;
+        }
+
+        @Override
+        public IModelState getCombinedState()
+        {
+            return ModelRotation.X0_Y0;
         }
     }
 }

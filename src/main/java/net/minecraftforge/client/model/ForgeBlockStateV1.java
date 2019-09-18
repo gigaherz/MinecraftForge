@@ -827,6 +827,7 @@ public class ForgeBlockStateV1 extends Marker
 
         // Note: these strings might change to a full-blown resource locations in the future, and move from here to some json somewhere
         // TODO: vanilla now includes from parent, deprecate?
+        @Deprecated
         private static final ImmutableMap<String, IModelState> transforms;
 
         static

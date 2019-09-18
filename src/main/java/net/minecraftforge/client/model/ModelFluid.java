@@ -64,6 +64,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+// TODO: Remake using the new model system
+@Deprecated
 public final class ModelFluid implements IUnbakedModel
 {
     private static final Logger LOGGER = LogManager.getLogger();

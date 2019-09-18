@@ -119,6 +119,32 @@ public class NewModelLoaderTest
     public void clientSetup(FMLClientSetupEvent event)
     {
         ModelLoaderRegistry2.registerLoader(new ResourceLocation(MODID, "custom_loader"), new TestLoader());
+
+        MinecraftForge.EVENT_BUS.addListener(this::renderGuiOverlay);
+    }
+
+    private NonNullLazy<IRenderable.Configured<?>> modelRenderer = NonNullLazy.of(() -> {
+        OBJModel2 model = OBJLoader2.INSTANCE.loadModel(new ResourceLocation("new_model_loader_test", "models/item/sugar_glider.obj"), false, false, false, false);
+        return IRenderable.withParameter(model.bakeRenderable(ModelLoader.defaultTextureGetter()), null);
+    });
+
+    private NonNullLazy<BakedModelRenderable> modelRenderer2 = NonNullLazy.of(() -> {
+        return BakedModelRenderable.of(new ItemStack(Items.COAL));
+    });
+
+    public void renderGuiOverlay(RenderGameOverlayEvent.Post event)
+    {
+        if (event.getType() == RenderGameOverlayEvent.ElementType.ALL)
+        {
+            Minecraft mc = Minecraft.getInstance();
+            mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+            GlStateManager.pushMatrix();
+            GlStateManager.translatef(event.getWindow().getScaledWidth() / 2.0f, event.getWindow().getScaledHeight() / 2.0f, 200);
+            mc.getItemRenderer().renderItemAndEffectIntoGUI(new ItemStack(Items.COAL),0,0);
+            modelRenderer.get().render();
+            modelRenderer2.get().render(new BakedModelRenderable.Context().withPerspective(ItemCameraTransforms.TransformType.GUI).withStack(new ItemStack(Items.COAL)));
+            GlStateManager.popMatrix();
+        }
     }
 
     static class TestLoader implements IModelLoader<TestModel>

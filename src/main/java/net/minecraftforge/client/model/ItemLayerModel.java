@@ -58,6 +58,8 @@ import com.google.common.collect.ImmutableMap;
  * - Various fixes in the baking logic.
  * - Not limited to 4 layers maximum.
  */
+// TODO: Remake using the new model system
+@Deprecated
 public final class ItemLayerModel implements IUnbakedModel
 {
     public static final ItemLayerModel INSTANCE = new ItemLayerModel(ImmutableList.of());

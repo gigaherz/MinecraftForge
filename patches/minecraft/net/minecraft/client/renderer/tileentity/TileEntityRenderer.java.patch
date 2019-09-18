@@ -1,5 +1,14 @@
 --- a/net/minecraft/client/renderer/tileentity/TileEntityRenderer.java
 +++ b/net/minecraft/client/renderer/tileentity/TileEntityRenderer.java
+@@ -17,7 +17,7 @@
+ import net.minecraftforge.api.distmarker.OnlyIn;
+ 
+ @OnlyIn(Dist.CLIENT)
+-public abstract class TileEntityRenderer<T extends TileEntity> {
++public abstract class TileEntityRenderer<T extends TileEntity> implements net.minecraftforge.client.model.dynamic.adapters.ITileEntityRenderable<T> {
+    public static final ResourceLocation[] field_178460_a = new ResourceLocation[]{new ResourceLocation("textures/" + ModelBakery.field_207770_h.func_110623_a() + ".png"), new ResourceLocation("textures/" + ModelBakery.field_207771_i.func_110623_a() + ".png"), new ResourceLocation("textures/" + ModelBakery.field_207772_j.func_110623_a() + ".png"), new ResourceLocation("textures/" + ModelBakery.field_207773_k.func_110623_a() + ".png"), new ResourceLocation("textures/" + ModelBakery.field_207774_l.func_110623_a() + ".png"), new ResourceLocation("textures/" + ModelBakery.field_207775_m.func_110623_a() + ".png"), new ResourceLocation("textures/" + ModelBakery.field_207776_n.func_110623_a() + ".png"), new ResourceLocation("textures/" + ModelBakery.field_207777_o.func_110623_a() + ".png"), new ResourceLocation("textures/" + ModelBakery.field_207778_p.func_110623_a() + ".png"), new ResourceLocation("textures/" + ModelBakery.field_207779_q.func_110623_a() + ".png")};
+    protected TileEntityRendererDispatcher field_147501_a;
+ 
 @@ -66,6 +66,8 @@
        return false;
     }
