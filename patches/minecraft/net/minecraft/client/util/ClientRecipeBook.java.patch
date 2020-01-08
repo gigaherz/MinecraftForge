@@ -1,0 +1,19 @@
+--- a/net/minecraft/client/util/ClientRecipeBook.java
++++ b/net/minecraft/client/util/ClientRecipeBook.java
+@@ -66,6 +66,7 @@
+       this.field_197931_e.computeIfAbsent(p_202889_1_, (p_202890_0_) -> {
+          return Lists.newArrayList();
+       }).add(recipelist);
++      if (net.minecraftforge.client.ForgeHooksClient.addRecipesToSearchTab(p_202889_1_, this::func_216767_a, recipelist)) return recipelist;
+       if (p_202889_1_ != RecipeBookCategories.FURNACE_BLOCKS && p_202889_1_ != RecipeBookCategories.FURNACE_FOOD && p_202889_1_ != RecipeBookCategories.FURNACE_MISC) {
+          if (p_202889_1_ != RecipeBookCategories.BLAST_FURNACE_BLOCKS && p_202889_1_ != RecipeBookCategories.BLAST_FURNACE_MISC) {
+             if (p_202889_1_ == RecipeBookCategories.SMOKER_FOOD) {
+@@ -95,6 +96,8 @@
+ 
+    private static RecipeBookCategories func_202887_g(IRecipe<?> p_202887_0_) {
+       IRecipeType<?> irecipetype = p_202887_0_.func_222127_g();
++      RecipeBookCategories category = net.minecraftforge.client.ForgeHooksClient.getCategoryForRecipe(irecipetype, p_202887_0_);
++      if (category != null) return category;
+       if (irecipetype == IRecipeType.field_222150_b) {
+          if (p_202887_0_.func_77571_b().func_77973_b().func_219971_r()) {
+             return RecipeBookCategories.FURNACE_FOOD;

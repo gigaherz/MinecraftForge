@@ -1,0 +1,46 @@
+--- a/net/minecraft/client/util/RecipeBookCategories.java
++++ b/net/minecraft/client/util/RecipeBookCategories.java
+@@ -9,7 +9,7 @@
+ import net.minecraftforge.api.distmarker.OnlyIn;
+ 
+ @OnlyIn(Dist.CLIENT)
+-public enum RecipeBookCategories {
++public enum RecipeBookCategories implements net.minecraftforge.common.IExtensibleEnum {
+    SEARCH(new ItemStack(Items.field_151111_aL)),
+    BUILDING_BLOCKS(new ItemStack(Blocks.field_196584_bK)),
+    REDSTONE(new ItemStack(Items.field_151137_ax)),
+@@ -28,12 +28,34 @@
+    CAMPFIRE(new ItemStack(Items.field_151147_al));
+ 
+    private final List<ItemStack> field_202904_j;
++   private boolean isSearch;
+ 
+    private RecipeBookCategories(ItemStack... p_i48836_3_) {
++      this(false, p_i48836_3_);
++   }
++
++   private RecipeBookCategories(boolean isSearch, ItemStack... p_i48836_3_) {
+       this.field_202904_j = ImmutableList.copyOf(p_i48836_3_);
++      this.isSearch = isSearch;
+    }
+ 
+    public List<ItemStack> func_202903_a() {
+       return this.field_202904_j;
+    }
++
++   public boolean isSearch() {
++      return isSearch;
++   }
++
++   public static RecipeBookCategories create(String name, ItemStack... icons) {
++      throw new IllegalStateException("Enum not extended");
++   }
++
++   public static RecipeBookCategories create(String name, boolean isSearch, ItemStack... icons) {
++      throw new IllegalStateException("Enum not extended");
++   }
++
++   public void init() {
++      isSearch = isSearch || this == RecipeBookCategories.SEARCH || this == RecipeBookCategories.FURNACE_SEARCH;
++   }
+ }

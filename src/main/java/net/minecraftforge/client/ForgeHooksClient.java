@@ -46,12 +46,21 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
+import com.google.common.collect.Maps;
+import net.minecraft.client.gui.recipebook.RecipeList;
 import net.minecraft.client.renderer.*;
+import net.minecraft.client.util.RecipeBookCategories;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.IRecipeType;
 import net.minecraftforge.client.model.pipeline.LightUtil;
+import net.minecraftforge.common.crafting.CraftingHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.async.ThreadNameCachingStrategy;
@@ -554,6 +563,40 @@ public class ForgeHooksClient
     public static Material getBlockMaterial(ResourceLocation loc)
     {
         return new Material(AtlasTexture.LOCATION_BLOCKS_TEXTURE, loc);
+    }
+
+    private static Map<RecipeBookCategories, RecipeBookCategories> recipeBookCategoryToSearchCategory = Maps.newHashMap();
+    public static void setSearchCategoryForCategory(RecipeBookCategories category, RecipeBookCategories searchCategory)
+    {
+        recipeBookCategoryToSearchCategory.put(category, searchCategory);
+    }
+    @Nullable
+    public static RecipeBookCategories getSearchCategory(RecipeBookCategories category)
+    {
+        return recipeBookCategoryToSearchCategory.get(category);
+    }
+    public static boolean addRecipesToSearchTab(RecipeBookCategories category, BiConsumer<RecipeBookCategories, RecipeList> func_216767_a, RecipeList recipelist)
+    {
+        RecipeBookCategories searchCategory = getSearchCategory(category);
+        if (searchCategory == null)
+            return false;
+        func_216767_a.accept(searchCategory, recipelist);
+        return true;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static Map<IRecipeType<?>, Function> recipeBookCategoryMappers = Maps.newHashMap();
+    public static <T extends IRecipe<?>> void setRecipeCategoryMapper(IRecipeType<T> type, Function<T, RecipeBookCategories> mapper)
+    {
+        recipeBookCategoryMappers.put(type, mapper);
+    }
+    @SuppressWarnings("unchecked")
+    @Nullable
+    public static RecipeBookCategories getCategoryForRecipe(IRecipeType<?> irecipetype, IRecipe<?> recipe)
+    {
+        if (!recipeBookCategoryMappers.containsKey(irecipetype))
+            return null;
+        return (RecipeBookCategories)recipeBookCategoryMappers.get(irecipetype).apply(recipe);
     }
 
     private static class LightGatheringTransformer extends QuadGatheringTransformer {

@@ -9,6 +9,15 @@
           this.field_193018_j.add(new RecipeTabToggleWidget(recipebookcategories));
        }
  
+@@ -196,7 +196,7 @@
+ 
+       for(RecipeTabToggleWidget recipetabtogglewidget : this.field_193018_j) {
+          RecipeBookCategories recipebookcategories = recipetabtogglewidget.func_201503_d();
+-         if (recipebookcategories != RecipeBookCategories.SEARCH && recipebookcategories != RecipeBookCategories.FURNACE_SEARCH) {
++         if (!recipebookcategories.isSearch()) {
+             if (recipetabtogglewidget.func_199500_a(this.field_193964_s)) {
+                recipetabtogglewidget.func_191752_c(i, j + 27 * l++);
+                recipetabtogglewidget.func_193918_a(this.field_191888_F);
 @@ -417,7 +417,7 @@
  
           languagemanager.func_135045_a(language);

@@ -1,0 +1,12 @@
+--- a/net/minecraft/item/crafting/ServerRecipePlacer.java
++++ b/net/minecraft/item/crafting/ServerRecipePlacer.java
+@@ -60,7 +60,8 @@
+    protected void func_201510_a(int p_201510_1_) {
+       ItemStack itemstack = this.field_201515_d.func_75139_a(p_201510_1_).func_75211_c();
+       if (!itemstack.func_190926_b()) {
+-         for(; itemstack.func_190916_E() > 0; this.field_201515_d.func_75139_a(p_201510_1_).func_75209_a(1)) {
++         Slot slot = field_201515_d.func_75139_a(p_201510_1_);
++         for(; (itemstack=slot.func_75211_c()).func_190916_E() > 0; slot.func_75209_a(1)) { // FORGE: fix infinite loop when using a wrapped ItemStackHandler
+             int i = this.field_201514_c.func_70432_d(itemstack);
+             if (i == -1) {
+                i = this.field_201514_c.func_70447_i();
