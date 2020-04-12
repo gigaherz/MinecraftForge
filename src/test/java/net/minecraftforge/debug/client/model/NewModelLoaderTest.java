@@ -22,12 +22,16 @@ package net.minecraftforge.debug.client.model;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.model.IUnbakedModel;
+import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.model.ModelBakery;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.ISprite;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
@@ -40,9 +44,16 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.model.*;
+import net.minecraftforge.client.model.dynamic.IRenderable;
+import net.minecraftforge.client.model.dynamic.adapters.BakedModelRenderable;
 import net.minecraftforge.client.model.geometry.ISimpleModelGeometry;
+import net.minecraftforge.client.model.obj.OBJLoader2;
+import net.minecraftforge.client.model.obj.OBJModel2;
 import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.NonNullLazy;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
@@ -124,7 +135,9 @@ public class NewModelLoaderTest
     }
 
     private NonNullLazy<IRenderable.Configured<?>> modelRenderer = NonNullLazy.of(() -> {
-        OBJModel2 model = OBJLoader2.INSTANCE.loadModel(new ResourceLocation("new_model_loader_test", "models/item/sugar_glider.obj"), false, false, false, false);
+        OBJModel2 model = OBJLoader2.INSTANCE.loadModel(new OBJModel2.ModelSettings(
+                new ResourceLocation("new_model_loader_test", "models/item/sugar_glider.obj"),
+                false, false, false, false, null));
         return IRenderable.withParameter(model.bakeRenderable(ModelLoader.defaultTextureGetter()), null);
     });
 
@@ -142,7 +155,7 @@ public class NewModelLoaderTest
             GlStateManager.translatef(event.getWindow().getScaledWidth() / 2.0f, event.getWindow().getScaledHeight() / 2.0f, 200);
             mc.getItemRenderer().renderItemAndEffectIntoGUI(new ItemStack(Items.COAL),0,0);
             modelRenderer.get().render();
-            modelRenderer2.get().render(new BakedModelRenderable.Context().withPerspective(ItemCameraTransforms.TransformType.GUI).withStack(new ItemStack(Items.COAL)));
+            //modelRenderer2.get().render(new BakedModelRenderable.Context().withPerspective(ItemCameraTransforms.TransformType.GUI).withStack(new ItemStack(Items.COAL)));
             GlStateManager.popMatrix();
         }
     }

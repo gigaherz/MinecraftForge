@@ -81,7 +81,9 @@ public class BakedModelRenderable implements IRenderable<BakedModelRenderable.Co
         {
             Pair<? extends IBakedModel, Matrix4f> pair = actualModel.handlePerspective(contextData.getPerspective());
             actualModel = pair.getLeft();
-            ForgeHooksClient.multiplyCurrentGlMatrix(pair.getRight());
+            Matrix4f matrix = pair.getRight();
+            if (matrix != null)
+                ForgeHooksClient.multiplyCurrentGlMatrix(matrix);
         }
         if (contextData.getStack() != null)
             actualModel = actualModel.getOverrides().getModelWithOverrides(actualModel, contextData.getStack(), contextData.getWorld(), contextData.getEntity());
