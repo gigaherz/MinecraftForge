@@ -27,8 +27,10 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.INBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
@@ -47,12 +49,13 @@ import net.minecraftforge.common.util.LazyOptional;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CapabilityDispatcher implements INBTSerializable<CompoundNBT>, ICapabilityProvider
+public final class CapabilityDispatcher implements INBTSerializable<CompoundNBT>, ICapabilityProvider, INetworkCapability
 {
     private ICapabilityProvider[] caps;
     private INBTSerializable<INBT>[] writers;
-    private String[] names;
+    private String[] writerNames;
     private final List<Runnable> listeners;
+    private final Map<String, INetworkCapability> networkCapabilities = new Object2ObjectOpenHashMap<>();
 
     public CapabilityDispatcher(Map<ResourceLocation, ICapabilityProvider> list, List<Runnable> listeners)
     {
@@ -86,11 +89,15 @@ public final class CapabilityDispatcher implements INBTSerializable<CompoundNBT>
                 lstWriters.add((INBTSerializable<INBT>)prov);
                 lstNames.add(entry.getKey().toString());
             }
+            if (prov instanceof INetworkCapability)
+            {
+                this.networkCapabilities.put(entry.getKey().toString(), (INetworkCapability)prov);
+            }
         }
 
         caps = lstCaps.toArray(new ICapabilityProvider[lstCaps.size()]);
         writers = lstWriters.toArray(new INBTSerializable[lstWriters.size()]);
-        names = lstNames.toArray(new String[lstNames.size()]);
+        writerNames = lstNames.toArray(new String[lstNames.size()]);
     }
 
 
@@ -124,7 +131,7 @@ public final class CapabilityDispatcher implements INBTSerializable<CompoundNBT>
         CompoundNBT nbt = new CompoundNBT();
         for (int x = 0; x < writers.length; x++)
         {
-            nbt.put(names[x], writers[x].serializeNBT());
+            nbt.put(writerNames[x], writers[x].serializeNBT());
         }
         return nbt;
     }
@@ -134,9 +141,9 @@ public final class CapabilityDispatcher implements INBTSerializable<CompoundNBT>
     {
         for (int x = 0; x < writers.length; x++)
         {
-            if (nbt.contains(names[x]))
+            if (nbt.contains(writerNames[x]))
             {
-                writers[x].deserializeNBT(nbt.get(names[x]));
+                writers[x].deserializeNBT(nbt.get(writerNames[x]));
             }
         }
     }
@@ -151,5 +158,45 @@ public final class CapabilityDispatcher implements INBTSerializable<CompoundNBT>
     public void invalidate()
     {
         this.listeners.forEach(Runnable::run);
+    }
+    
+    @Override
+    public void encode(PacketBuffer out, boolean writeAll)
+    {
+        // @formatter:off
+        out.writeVarInt(writeAll ? networkCapabilities.size() : (int)networkCapabilities.values()
+                .parallelStream()
+                .filter(INetworkCapability::requiresSync)
+                .count());
+        // @formatter:on
+        for (Map.Entry<String, INetworkCapability> entry : networkCapabilities.entrySet())
+        {
+            if (!writeAll && !entry.getValue().requiresSync()) {
+                continue;
+            }
+            
+            out.writeString(entry.getKey(), 0x100);
+            entry.getValue().encode(out, writeAll);
+        }
+    }
+
+    @Override
+    public void decode(PacketBuffer in)
+    {
+        int size = in.readVarInt();
+        for (int x = 0; x < size; x++)
+        {
+            String name = in.readString(0x100);
+            INetworkCapability cap = networkCapabilities.get(name);
+            if (cap == null)
+                throw new IllegalStateException("Missing network capability: " + name);
+            cap.decode(in);
+        }
+    }
+    
+    @Override
+    public boolean requiresSync()
+    {
+        return networkCapabilities.values().stream().anyMatch(INetworkCapability::requiresSync);
     }
 }

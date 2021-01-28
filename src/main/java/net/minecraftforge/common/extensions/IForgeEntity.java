@@ -20,28 +20,31 @@
 package net.minecraftforge.common.extensions;
 
 import java.util.Collection;
+
 import javax.annotation.Nullable;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.LeashKnotEntity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.item.BoatEntity;
 import net.minecraft.entity.item.EnderCrystalEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.item.ItemFrameEntity;
-import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
+import net.minecraft.entity.item.LeashKnotEntity;
 import net.minecraft.entity.item.PaintingEntity;
+import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.SpawnEggItem;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.capabilities.INetworkCapability;
 
-public interface IForgeEntity extends ICapabilitySerializable<CompoundNBT>
+public interface IForgeEntity extends ICapabilitySerializable<CompoundNBT>, INetworkCapability
 {
     default Entity getEntity() { return (Entity) this; }
 

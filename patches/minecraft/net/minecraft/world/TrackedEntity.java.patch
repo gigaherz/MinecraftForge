@@ -27,3 +27,27 @@
     }
  
     public void func_219452_a(Consumer<IPacket<?>> p_219452_1_) {
+@@ -204,7 +205,9 @@
+       this.field_219470_l = MathHelper.func_76141_d(this.field_219461_c.func_70079_am() * 256.0F / 360.0F);
+       p_219452_1_.accept(ipacket);
+       if (!this.field_219461_c.func_184212_Q().func_187228_d()) {
+-         p_219452_1_.accept(new SEntityMetadataPacket(this.field_219461_c.func_145782_y(), this.field_219461_c.func_184212_Q(), true));
++         net.minecraft.network.PacketBuffer capabilityData = new net.minecraft.network.PacketBuffer(io.netty.buffer.ByteBufAllocator.DEFAULT.ioBuffer());
++         this.field_219461_c.encode(capabilityData, true);
++         p_219452_1_.accept(new SEntityMetadataPacket(this.field_219461_c.func_145782_y(), this.field_219461_c.func_184212_Q(), true, capabilityData));
+       }
+ 
+       boolean flag = this.field_219463_e;
+@@ -266,8 +269,10 @@
+ 
+    private void func_219457_c() {
+       EntityDataManager entitydatamanager = this.field_219461_c.func_184212_Q();
+-      if (entitydatamanager.func_187223_a()) {
+-         this.func_219451_a(new SEntityMetadataPacket(this.field_219461_c.func_145782_y(), entitydatamanager, false));
++      if (entitydatamanager.func_187223_a() || this.field_219461_c.requiresSync()) {
++         net.minecraft.network.PacketBuffer capabilityData = new net.minecraft.network.PacketBuffer(io.netty.buffer.ByteBufAllocator.DEFAULT.ioBuffer());
++         this.field_219461_c.encode(capabilityData, false);
++         this.func_219451_a(new SEntityMetadataPacket(this.field_219461_c.func_145782_y(), entitydatamanager, false, capabilityData));
+       }
+ 
+       if (this.field_219461_c instanceof LivingEntity) {

@@ -25,7 +25,7 @@
        if (p_150788_1_.func_190926_b()) {
           this.writeBoolean(false);
        } else {
-@@ -300,8 +309,8 @@
+@@ -300,11 +309,12 @@
           this.func_150787_b(Item.func_150891_b(item));
           this.writeByte(p_150788_1_.func_190916_E());
           CompoundNBT compoundnbt = null;
@@ -36,12 +36,17 @@
           }
  
           this.func_150786_a(compoundnbt);
-@@ -317,7 +326,7 @@
++         p_150788_1_.encode(this, !limitedTag);
+       }
+ 
+       return this;
+@@ -317,7 +327,8 @@
           int i = this.func_150792_a();
           int j = this.readByte();
           ItemStack itemstack = new ItemStack(Item.func_150899_d(i), j);
 -         itemstack.func_77982_d(this.func_150793_b());
 +         itemstack.readShareTag(this.func_150793_b());
++         itemstack.decode(this);
           return itemstack;
        }
     }

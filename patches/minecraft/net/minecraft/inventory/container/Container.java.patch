@@ -1,10 +1,13 @@
 --- a/net/minecraft/inventory/container/Container.java
 +++ b/net/minecraft/inventory/container/Container.java
-@@ -120,9 +120,11 @@
+@@ -119,10 +119,13 @@
+       for(int i = 0; i < this.field_75151_b.size(); ++i) {
           ItemStack itemstack = this.field_75151_b.get(i).func_75211_c();
           ItemStack itemstack1 = this.field_75153_a.get(i);
-          if (!ItemStack.func_77989_b(itemstack1, itemstack)) {
-+            boolean clientStackChanged = !itemstack1.equals(itemstack, true);
+-         if (!ItemStack.func_77989_b(itemstack1, itemstack)) {
++         boolean requiresSync = itemstack.requiresSync();
++         if (!ItemStack.func_77989_b(itemstack1, itemstack) || requiresSync) {
++            boolean clientStackChanged = !itemstack1.equals(itemstack, true) || requiresSync;
              ItemStack itemstack2 = itemstack.func_77946_l();
              this.field_75153_a.set(i, itemstack2);
  
@@ -12,7 +15,7 @@
              for(IContainerListener icontainerlistener : this.field_75149_d) {
                 icontainerlistener.func_71111_a(this, i, itemstack2);
              }
-@@ -500,14 +502,15 @@
+@@ -500,14 +503,15 @@
              ItemStack itemstack = slot.func_75211_c();
              if (!itemstack.func_190926_b() && func_195929_a(p_75135_1_, itemstack)) {
                 int j = itemstack.func_190916_E() + p_75135_1_.func_190916_E();
@@ -32,7 +35,7 @@
                    slot.func_75218_e();
                    flag = true;
                 }
-@@ -608,7 +611,7 @@
+@@ -608,7 +612,7 @@
           p_94525_2_.func_190920_e(1);
           break;
        case 2:
