@@ -25,7 +25,7 @@
        if (p_150788_1_.func_190926_b()) {
           this.writeBoolean(false);
        } else {
-@@ -300,11 +309,12 @@
+@@ -300,11 +309,17 @@
           this.func_150787_b(Item.func_150891_b(item));
           this.writeByte(p_150788_1_.func_190916_E());
           CompoundNBT compoundnbt = null;
@@ -34,19 +34,26 @@
 +         if (item.isDamageable(p_150788_1_) || item.func_77651_p()) {
 +            compoundnbt = limitedTag ? p_150788_1_.getShareTag() : p_150788_1_.func_77978_p();
           }
- 
+-
++         compoundnbt = compoundnbt == null ? new CompoundNBT() : compoundnbt;
++         PacketBuffer capabilityBuffer = new PacketBuffer(io.netty.buffer.Unpooled.buffer());
++         p_150788_1_.encode(capabilityBuffer, !limitedTag);
++         byte[] capabilityBytes = new byte[capabilityBuffer.readableBytes()];
++         capabilityBuffer.readBytes(capabilityBytes);
++         compoundnbt.func_74773_a("__FORGE_SYNC_CAPS__", capabilityBytes);
           this.func_150786_a(compoundnbt);
-+         p_150788_1_.encode(this, !limitedTag);
++         
        }
  
        return this;
-@@ -317,7 +327,8 @@
+@@ -317,7 +332,9 @@
           int i = this.func_150792_a();
           int j = this.readByte();
           ItemStack itemstack = new ItemStack(Item.func_150899_d(i), j);
 -         itemstack.func_77982_d(this.func_150793_b());
-+         itemstack.readShareTag(this.func_150793_b());
-+         itemstack.decode(this);
++         CompoundNBT nbt = this.func_150793_b();
++         itemstack.readShareTag(nbt);
++         itemstack.decode(new PacketBuffer(io.netty.buffer.Unpooled.wrappedBuffer(nbt.func_74770_j("__FORGE_SYNC_CAPS__"))));
           return itemstack;
        }
     }

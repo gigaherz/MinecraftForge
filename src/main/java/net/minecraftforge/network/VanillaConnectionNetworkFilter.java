@@ -34,6 +34,7 @@ import net.minecraft.command.arguments.ArgumentTypes;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SCommandListPacket;
+import net.minecraft.network.play.server.SEntityMetadataPacket;
 import net.minecraft.network.play.server.SEntityPropertiesPacket;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkHooks;
@@ -57,6 +58,7 @@ public class VanillaConnectionNetworkFilter extends MessageToMessageEncoder<IPac
     private static final Map<Class<? extends IPacket<?>>, Function<IPacket<?>, ? extends IPacket<?>>> handlers = ImmutableMap.<Class<? extends IPacket<?>>, Function<IPacket<?>, ? extends IPacket<?>>>builder()
             .put(handler(SEntityPropertiesPacket.class, VanillaConnectionNetworkFilter::filterEntityProperties))
             .put(handler(SCommandListPacket.class, VanillaConnectionNetworkFilter::filterCommandList))
+            .put(handler(SEntityMetadataPacket.class, VanillaConnectionNetworkFilter::filterEntityMetadata))
             .build();
 
 
@@ -108,6 +110,15 @@ public class VanillaConnectionNetworkFilter extends MessageToMessageEncoder<IPac
             return id != null && (id.getNamespace().equals("minecraft") || id.getNamespace().equals("brigadier"));
         });
         return new SCommandListPacket(newRoot);
+    }
+    
+    /**
+     * Filter for SEntityMetadataPacket. Remove capability data for vanilla clients.
+     */
+    @Nonnull
+    private static SEntityMetadataPacket filterEntityMetadata(SEntityMetadataPacket packet)
+    {
+        return new SEntityMetadataPacket(packet.getEntityId(), packet.getDataManagerEntries());
     }
 
     @Override

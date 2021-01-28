@@ -32,7 +32,7 @@
        p_219452_1_.accept(ipacket);
        if (!this.field_219461_c.func_184212_Q().func_187228_d()) {
 -         p_219452_1_.accept(new SEntityMetadataPacket(this.field_219461_c.func_145782_y(), this.field_219461_c.func_184212_Q(), true));
-+         net.minecraft.network.PacketBuffer capabilityData = new net.minecraft.network.PacketBuffer(io.netty.buffer.ByteBufAllocator.DEFAULT.ioBuffer());
++         net.minecraft.network.PacketBuffer capabilityData = new net.minecraft.network.PacketBuffer(io.netty.buffer.Unpooled.buffer());
 +         this.field_219461_c.encode(capabilityData, true);
 +         p_219452_1_.accept(new SEntityMetadataPacket(this.field_219461_c.func_145782_y(), this.field_219461_c.func_184212_Q(), true, capabilityData));
        }
@@ -45,7 +45,7 @@
 -      if (entitydatamanager.func_187223_a()) {
 -         this.func_219451_a(new SEntityMetadataPacket(this.field_219461_c.func_145782_y(), entitydatamanager, false));
 +      if (entitydatamanager.func_187223_a() || this.field_219461_c.requiresSync()) {
-+         net.minecraft.network.PacketBuffer capabilityData = new net.minecraft.network.PacketBuffer(io.netty.buffer.ByteBufAllocator.DEFAULT.ioBuffer());
++         net.minecraft.network.PacketBuffer capabilityData = new net.minecraft.network.PacketBuffer(io.netty.buffer.Unpooled.buffer());
 +         this.field_219461_c.encode(capabilityData, false);
 +         this.func_219451_a(new SEntityMetadataPacket(this.field_219461_c.func_145782_y(), entitydatamanager, false, capabilityData));
        }

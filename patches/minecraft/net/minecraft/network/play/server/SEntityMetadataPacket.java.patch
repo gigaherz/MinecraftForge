@@ -1,10 +1,10 @@
 --- a/net/minecraft/network/play/server/SEntityMetadataPacket.java
 +++ b/net/minecraft/network/play/server/SEntityMetadataPacket.java
-@@ -12,29 +12,34 @@
+@@ -12,29 +12,42 @@
  public class SEntityMetadataPacket implements IPacket<IClientPlayNetHandler> {
     private int field_149379_a;
     private List<EntityDataManager.DataEntry<?>> field_149378_b;
-+   private PacketBuffer capabilityData;
++   private @javax.annotation.Nullable PacketBuffer capabilityData;
 +   public PacketBuffer getCapabilityData() { return this.capabilityData; }
  
     public SEntityMetadataPacket() {
@@ -27,6 +27,12 @@
 -
 +      this.capabilityData = capabilityData;
     }
++   // Used for vanilla packet filter
++   public SEntityMetadataPacket(int entityIdIn, List<EntityDataManager.DataEntry<?>> dataManagerEntries) {
++       this.field_149379_a = entityIdIn;
++       this.field_149378_b = dataManagerEntries;
++       this.capabilityData = null;
++   }
  
     public void func_148837_a(PacketBuffer p_148837_1_) throws IOException {
        this.field_149379_a = p_148837_1_.func_150792_a();
@@ -37,8 +43,10 @@
     public void func_148840_b(PacketBuffer p_148840_1_) throws IOException {
        p_148840_1_.func_150787_b(this.field_149379_a);
        EntityDataManager.func_187229_a(this.field_149378_b, p_148840_1_);
-+      p_148840_1_.func_150787_b(this.capabilityData.readableBytes());
-+      if (this.capabilityData.isReadable()) p_148840_1_.writeBytes(this.capabilityData);
++      if (this.capabilityData != null) { // Only null for vanilla clients!
++         p_148840_1_.func_150787_b(this.capabilityData.readableBytes());
++         if (this.capabilityData.isReadable()) p_148840_1_.writeBytes(this.capabilityData);
++      }
     }
  
     public void func_148833_a(IClientPlayNetHandler p_148833_1_) {
